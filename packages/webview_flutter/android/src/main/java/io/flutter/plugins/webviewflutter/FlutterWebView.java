@@ -83,32 +83,6 @@ public class FlutterWebView implements PlatformView, MethodCallHandler, PluginRe
               return true;
             }
 
-            @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-            @Override
-            public boolean onShowFileChooser(
-                    WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
-
-              if (fileChooserParams != null) {
-
-                try {
-
-                  mFilePathCallback = filePathCallback;
-
-                  startFileChooser(fileChooserParams);
-
-                } catch (Exception e) {
-
-                  e.printStackTrace();
-
-                }
-
-              }
-
-              return true;
-
-            }
-
-
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
               if (!flutterWebViewClient.shouldOverrideUrlLoading(
@@ -128,6 +102,33 @@ public class FlutterWebView implements PlatformView, MethodCallHandler, PluginRe
 
       return true;
     }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    public boolean onShowFileChooser(
+            WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+
+
+      if (fileChooserParams != null) {
+
+        try {
+
+          mFilePathCallback = filePathCallback;
+
+          startFileChooser(fileChooserParams);
+
+        } catch (Exception e) {
+
+          e.printStackTrace();
+
+        }
+
+      }
+
+      return true;
+
+    }
+
   }
 
   @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
