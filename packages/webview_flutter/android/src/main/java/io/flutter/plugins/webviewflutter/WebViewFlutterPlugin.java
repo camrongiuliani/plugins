@@ -61,11 +61,11 @@ public class WebViewFlutterPlugin implements FlutterPlugin, ActivityAware {
    */
   @SuppressWarnings("deprecation")
   public static void registerWith(io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
-    registrar
-        .platformViewRegistry()
-        .registerViewFactory(
-            "plugins.flutter.io/webview",
-            new WebViewFactory(registrar, registrar.view()));
+//    registrar
+//        .platformViewRegistry()
+//        .registerViewFactory(
+//            "plugins.flutter.io/webview",
+//            new WebViewFactory(registrar, registrar.view()));
     new FlutterCookieManager(registrar.messenger());
   }
 
