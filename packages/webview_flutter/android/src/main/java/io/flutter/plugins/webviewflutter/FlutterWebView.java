@@ -86,26 +86,22 @@ public class FlutterWebView implements PlatformView, MethodCallHandler, PluginRe
 
               if (fileChooserParams != null) {
 
-                mFilePathCallback = valueCallback;
-                mFileChooserParams = fileChooserParams;
+                try {
 
-                if (ContextCompat.checkSelfPermission(mRegistrar.activity(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
+                  mFilePathCallback = filePathCallback;
 
-                  ActivityCompat.requestPermissions(mRegistrar.activity(),
-                          new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                          STORAGE_PERMISSION_RESULT);
+                  startFileChooser(fileChooserParams);
 
-                  return true;
+                } catch (Exception e) {
+
+                  e.printStackTrace();
 
                 }
 
-                startFileChooser(mFileChooserParams);
-
               }
 
-
               return true;
+
             }
 
 
