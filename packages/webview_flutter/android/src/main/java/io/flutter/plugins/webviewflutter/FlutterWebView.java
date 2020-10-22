@@ -16,11 +16,26 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.ValueCallback;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.Manifest;
+import android.content.ActivityNotFoundException;
+import android.net.Uri;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import static android.app.Activity.RESULT_CANCELED;
+import static android.app.Activity.RESULT_OK;
+
 import androidx.annotation.NonNull;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
+import io.flutter.plugin.common.PluginRegistry;
+
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.platform.PlatformView;
 import java.util.Collections;
@@ -29,10 +44,20 @@ import java.util.Map;
 
 public class FlutterWebView implements PlatformView, MethodCallHandler {
   private static final String JS_CHANNEL_NAMES_FIELD = "javascriptChannelNames";
+
+  private static final int REQUEST_CODE_FILE_CHOOSER = 0x12;
+  private static final int STORAGE_PERMISSION_RESULT = 0x13;
+
   private final InputAwareWebView webView;
   private final MethodChannel methodChannel;
   private final FlutterWebViewClient flutterWebViewClient;
   private final Handler platformThreadHandler;
+
+  private final PluginRegistry.Registrar mRegistrar;
+
+  private ValueCallback<Uri[]> mFilePathCallback;
+  private WebChromeClient.FileChooserParams mFileChooserParams;
+
 
   // Verifies that a url opened by `Window.open` has a secure url.
   private class FlutterWebChromeClient extends WebChromeClient {
@@ -52,6 +77,36 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
               }
               return true;
             }
+
+            @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public boolean onShowFileChooser(
+                    WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+
+              if (fileChooserParams != null) {
+
+                mFilePathCallback = valueCallback;
+                mFileChooserParams = fileChooserParams;
+
+                if (ContextCompat.checkSelfPermission(mRegistrar.activity(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+                  ActivityCompat.requestPermissions(mRegistrar.activity(),
+                          new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                          STORAGE_PERMISSION_RESULT);
+
+                  return true;
+
+                }
+
+                startFileChooser(mFileChooserParams);
+
+              }
+
+
+              return true;
+            }
+
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -78,10 +133,14 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
   @SuppressWarnings("unchecked")
   FlutterWebView(
       final Context context,
-      BinaryMessenger messenger,
+      PluginRegistry.Registrar registrar,
       int id,
       Map<String, Object> params,
       View containerView) {
+
+    this.mRegistrar = registrar;
+
+    mRegistrar.addActivityResultListener(this);
 
     DisplayListenerProxy displayListenerProxy = new DisplayListenerProxy();
     DisplayManager displayManager =
@@ -99,7 +158,7 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
     webView.getSettings().setSupportMultipleWindows(true);
     webView.setWebChromeClient(new FlutterWebChromeClient());
 
-    methodChannel = new MethodChannel(messenger, "plugins.flutter.io/webview_" + id);
+    methodChannel = new MethodChannel(mRegistrar.messenger(), "plugins.flutter.io/webview_" + id);
     methodChannel.setMethodCallHandler(this);
 
     flutterWebViewClient = new FlutterWebViewClient(methodChannel);
@@ -122,6 +181,58 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       webView.loadUrl(url);
     }
   }
+
+  private void startFileChooser(WebChromeClient.FileChooserParams fileChooserParams) {
+
+    Intent intent = fileChooserParams.createIntent();
+    intent.addCategory(Intent.CATEGORY_OPENABLE);
+    try {
+
+      mRegistrar.activity().startActivityForResult(intent, REQUEST_CODE_FILE_CHOOSER);
+
+    } catch (ActivityNotFoundException e) {
+
+      e.printStackTrace();
+
+    }
+
+  }
+
+  @Override
+  public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
+
+    if (requestCode == REQUEST_CODE_FILE_CHOOSER
+            && (resultCode == RESULT_OK || resultCode == RESULT_CANCELED)) {
+
+      mFilePathCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
+
+      mFileChooserParams = null;
+
+      return true;
+
+    }
+
+    return false;
+
+  }
+
+  @Override
+  public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+
+    if (requestCode == STORAGE_PERMISSION_RESULT && grantResults.length > 0
+            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+      startFileChooser(mFileChooserParams);
+
+      return true;
+
+    }
+
+    return  false;
+
+  }
+
+
 
   @Override
   public View getView() {
