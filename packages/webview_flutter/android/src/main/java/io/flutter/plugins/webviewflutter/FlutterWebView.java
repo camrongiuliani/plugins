@@ -235,25 +235,6 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
 
   }
 
-
-  @Override
-  public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-
-    if (requestCode == STORAGE_PERMISSION_RESULT && grantResults.length > 0
-            && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-      startFileChooser(mFileChooserParams);
-
-      return true;
-
-    }
-
-    return  false;
-
-  }
-
-
-
   @Override
   public View getView() {
     return webView;
