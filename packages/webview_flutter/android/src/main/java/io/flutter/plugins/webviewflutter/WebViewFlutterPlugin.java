@@ -75,7 +75,7 @@ public class WebViewFlutterPlugin implements FlutterPlugin, ActivityAware {
 
     binaryMessenger = flutterPluginBinding.getBinaryMessenger();
 
-    flutterCookieManager = new FlutterCookieManager(messenger);
+    flutterCookieManager = new FlutterCookieManager(binaryMessenger);
   }
 
   @Override
