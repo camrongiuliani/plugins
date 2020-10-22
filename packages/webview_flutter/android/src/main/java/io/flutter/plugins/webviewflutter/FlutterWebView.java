@@ -43,7 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class FlutterWebView implements PlatformView, MethodCallHandler {
+public class FlutterWebView implements PlatformView, MethodCallHandler, PluginRegistry.ActivityResultListener {
   private static final String JS_CHANNEL_NAMES_FIELD = "javascriptChannelNames";
 
   private static final int REQUEST_CODE_FILE_CHOOSER = 0x12;
