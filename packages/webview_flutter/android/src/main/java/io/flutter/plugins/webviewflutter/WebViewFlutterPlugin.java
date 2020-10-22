@@ -4,8 +4,24 @@
 
 package io.flutter.plugins.webviewflutter;
 
+import android.content.Intent;
+import android.net.Uri;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
+
+import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.PluginRegistry;
+import io.flutter.plugin.common.PluginRegistry.Registrar;
+import io.flutter.plugin.platform.PlatformView;
+import io.flutter.plugin.platform.PlatformViewRegistry;
+
+import static android.app.Activity.RESULT_CANCELED;
+import static android.app.Activity.RESULT_OK;
+
 
 /**
  * Java platform implementation of the webview_flutter plugin.
@@ -15,9 +31,12 @@ import io.flutter.plugin.common.BinaryMessenger;
  * <p>Call {@link #registerWith(Registrar)} to use the stable {@code io.flutter.plugin.common}
  * package instead.
  */
-public class WebViewFlutterPlugin implements FlutterPlugin {
+public class WebViewFlutterPlugin implements FlutterPlugin, ActivityAware {
 
   private FlutterCookieManager flutterCookieManager;
+  private FlutterPluginBinding flutterPluginBinding;
+  private BinaryMessenger binaryMessenger;
+
 
   /**
    * Add an instance of this to {@link io.flutter.embedding.engine.plugins.PluginRegistry} to
@@ -52,11 +71,10 @@ public class WebViewFlutterPlugin implements FlutterPlugin {
 
   @Override
   public void onAttachedToEngine(FlutterPluginBinding binding) {
-    BinaryMessenger messenger = binding.getBinaryMessenger();
-    binding
-        .getPlatformViewRegistry()
-        .registerViewFactory(
-            "plugins.flutter.io/webview", new WebViewFactory(messenger, /*containerView=*/ null));
+    flutterPluginBinding = binding;
+
+    binaryMessenger = flutterPluginBinding.getBinaryMessenger();
+
     flutterCookieManager = new FlutterCookieManager(messenger);
   }
 
@@ -69,4 +87,33 @@ public class WebViewFlutterPlugin implements FlutterPlugin {
     flutterCookieManager.dispose();
     flutterCookieManager = null;
   }
+
+  @Override
+  public void onAttachedToActivity(ActivityPluginBinding binding) {
+
+    flutterPluginBinding
+            .getFlutterEngine()
+            .getPlatformViewsController()
+            .getRegistry()
+            .registerViewFactory(
+                    "plugins.flutter.io/webview", new WebViewFactory(binding,  binaryMessenger, /*containerView=*/ null));
+
+  }
+
+  @Override
+  public void onDetachedFromActivityForConfigChanges() {
+
+  }
+
+  @Override
+  public void onReattachedToActivityForConfigChanges(ActivityPluginBinding binding) {
+
+  }
+
+  @Override
+  public void onDetachedFromActivity() {
+
+  }
+
+
 }

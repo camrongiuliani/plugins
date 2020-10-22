@@ -4,30 +4,36 @@
 
 package io.flutter.plugins.webviewflutter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.view.View;
+
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.StandardMessageCodec;
 import io.flutter.plugin.platform.PlatformView;
 import io.flutter.plugin.platform.PlatformViewFactory;
-import io.flutter.plugin.common.PluginRegistry;
-
 import java.util.Map;
 
+
 public final class WebViewFactory extends PlatformViewFactory {
-  private final PluginRegistry.Registrar registrar;
+  private final BinaryMessenger messenger;
+  private final ActivityPluginBinding activityBinding;
   private final View containerView;
 
-  WebViewFactory(PluginRegistry.Registrar registrar, View containerView) {
+  WebViewFactory(ActivityPluginBinding activityBinding, BinaryMessenger messenger, View containerView) {
     super(StandardMessageCodec.INSTANCE);
-    this.registrar = registrar;
+    this.activityBinding = activityBinding;
+    this.messenger = messenger;
     this.containerView = containerView;
   }
+
 
   @SuppressWarnings("unchecked")
   @Override
   public PlatformView create(Context context, int id, Object args) {
     Map<String, Object> params = (Map<String, Object>) args;
-    return new FlutterWebView(context, registrar, id, params, containerView);
+    return new FlutterWebView(context, activityBinding, messenger, id, params, containerView);
   }
 }
