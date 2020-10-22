@@ -8,6 +8,9 @@ import android.annotation.TargetApi;
 import io.flutter.app.FlutterApplication;
 import android.content.Context;
 import android.hardware.display.DisplayManager;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -24,6 +27,7 @@ import android.Manifest;
 import android.content.ActivityNotFoundException;
 import android.net.Uri;
 import androidx.annotation.Nullable;
+import android.app.Activity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
